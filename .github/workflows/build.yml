@@ -70,3 +70,127 @@ jobs:
                 console.log("Delete response status: %s", deleteResponse.status);
               }
             }
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Build
+        run: |
+          BINARY_NAME=binary-$(git describe --always)-windows.txt
+          cp program.txt $BINARY_NAME
+          echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
+
+      - name: Set and push nightly tag
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: git tag -f nightly && git push --tags -f
+
+      - name: Upload nightly release assets
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: actions/github-script@v5
+        with:
+          debug: true
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const fs = require('fs').promises;
+            const binaryName = process.env.BINARY_NAME;
+            const tag = 'nightly';
+            console.log("Getting release id for tag '%s'...", tag);
+            const release = await github.rest.repos.getReleaseByTag({
+              owner,
+              repo,
+              tag
+            });
+            const release_id = release.data.id;
+            console.log("Retrieving list of assets for release id %s...", release_id);
+            const assets = await github.rest.repos.listReleaseAssets({
+              owner,
+              repo,
+              release_id
+            });
+            const data = await fs.readFile(binaryName);
+            console.log("Uploading asset %s...", binaryName);
+            const uploadResponse = await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.data.id,
+              name: binaryName,
+              data
+            });
+            console.log("Upload response status: %s", uploadResponse.status);
+            for (const asset of assets.data) {
+              if (asset.name.includes("windows") && asset.name != binaryName) {
+                console.log("Deleting old asset %s...", asset.name);
+                const deleteResponse = await github.rest.repos.deleteReleaseAsset({
+                  owner,
+                  repo,
+                  asset_id: asset.id
+                });
+                console.log("Delete response status: %s", deleteResponse.status);
+              }
+            }
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Build
+        run: |
+          BINARY_NAME=binary-$(git describe --always)-macos.txt
+          cp program.txt $BINARY_NAME
+          echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
+
+      - name: Set and push nightly tag
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: git tag -f nightly && git push --tags -f
+
+      - name: Upload nightly release assets
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: actions/github-script@v5
+        with:
+          debug: true
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const fs = require('fs').promises;
+            const binaryName = process.env.BINARY_NAME;
+            const tag = 'nightly';
+            console.log("Getting release id for tag '%s'...", tag);
+            const release = await github.rest.repos.getReleaseByTag({
+              owner,
+              repo,
+              tag
+            });
+            const release_id = release.data.id;
+            console.log("Retrieving list of assets for release id %s...", release_id);
+            const assets = await github.rest.repos.listReleaseAssets({
+              owner,
+              repo,
+              release_id
+            });
+            const data = await fs.readFile(binaryName);
+            console.log("Uploading asset %s...", binaryName);
+            const uploadResponse = await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.data.id,
+              name: binaryName,
+              data
+            });
+            console.log("Upload response status: %s", uploadResponse.status);
+            for (const asset of assets.data) {
+              if (asset.name.includes("macos") && asset.name != binaryName) {
+                console.log("Deleting old asset %s...", asset.name);
+                const deleteResponse = await github.rest.repos.deleteReleaseAsset({
+                  owner,
+                  repo,
+                  asset_id: asset.id
+                });
+                console.log("Delete response status: %s", deleteResponse.status);
+              }
+            }
