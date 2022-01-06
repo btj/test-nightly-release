@@ -31,7 +31,7 @@ jobs:
         with:
           debug: true
           script: |
-            const fs = require('fs/promises');
+            const fs = require('fs').promises;
             const binaryName = process.env.BINARY_NAME;
             const release = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
