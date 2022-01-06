@@ -29,13 +29,14 @@ jobs:
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: actions/github-script@v5
         with:
+          debug: true
           script: |
             const fs = require('fs');
             const binaryName = process.env.BINARY_NAME;
             const release = await github.rest.repos.getReleaseByTag({
               context.repo.owner,
               context.repo.repo,
-              'nightly',
+              'nightly'
             });
             github.rest.repos.uploadReleaseAsset({
               context.repo.owner,
