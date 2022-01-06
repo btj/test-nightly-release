@@ -78,6 +78,7 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: Build
+        shell: bash
         run: |
           BINARY_NAME=binary-$(git describe --always)-windows.txt
           cp program.txt $BINARY_NAME
@@ -85,6 +86,7 @@ jobs:
 
       - name: Set and push nightly tag
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        shell: bash
         run: git tag -f nightly && git push --tags -f
 
       - name: Upload nightly release assets
