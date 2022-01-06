@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Build
+        run: |
+          BINARY_NAME=binary-$(git describe --always)-linux.txt
+          cp program.txt $BINARY_NAME
+          echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
+
+      - name: Set and push nightly tag
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: git tag -f nightly && git push --tags -f
+
+      - name: Upload nightly release assets
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const binaryName = process.env.BINARY_NAME;
+            const release = await github.rest.repos.getReleaseByTag({
+              context.repo.owner,
+              context.repo.repo,
+              'nightly',
+            });
+            github.rest.repos.uploadReleaseAsset({
+              context.repo.owner,
+              context.repo.repo,
+              release.id,
+              binaryName,
+              fs.open(binaryName)
+            });
