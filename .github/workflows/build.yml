@@ -31,14 +31,23 @@ jobs:
         with:
           debug: true
           script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
             const fs = require('fs').promises;
             const binaryName = process.env.BINARY_NAME;
             const release = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               tag: 'nightly'
             });
             console.log(release);
+            const release_id = release.data.id;
+            const assets = await github.rest.repos.listReleaseAssets({
+              owner,
+              repo,
+              release_id
+            });
+            console.log(assets);
             const data = await fs.readFile(binaryName);
             github.rest.repos.uploadReleaseAsset({
               owner: context.repo.owner,
@@ -47,3 +56,4 @@ jobs:
               name: binaryName,
               data
             });
+            
