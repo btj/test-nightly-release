@@ -34,14 +34,14 @@ jobs:
             const fs = require('fs');
             const binaryName = process.env.BINARY_NAME;
             const release = await github.rest.repos.getReleaseByTag({
-              context.repo.owner,
-              context.repo.repo,
-              'nightly'
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: 'nightly'
             });
             github.rest.repos.uploadReleaseAsset({
-              context.repo.owner,
-              context.repo.repo,
-              release.id,
-              binaryName,
-              fs.open(binaryName)
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              name: binaryName,
+              data: fs.open(binaryName)
             });
