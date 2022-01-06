@@ -44,5 +44,5 @@ jobs:
               repo: context.repo.repo,
               release_id: release.data.id,
               name: binaryName,
-              data: fs.createReadStream(await fs.open(binaryName))
+              data: (await fs.open(binaryName)).createReadStream()
             });
