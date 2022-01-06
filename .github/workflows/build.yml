@@ -39,10 +39,14 @@ jobs:
               tag: 'nightly'
             });
             console.log(release);
+            const f = await fs.open(binaryName);
+            console.log(f);
+            const s = f.createReadStream();
+            console.log(s);
             github.rest.repos.uploadReleaseAsset({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.data.id,
               name: binaryName,
-              data: (await fs.open(binaryName)).createReadStream()
+              data: s
             });
