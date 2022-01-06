@@ -35,25 +35,38 @@ jobs:
             const repo = context.repo.repo;
             const fs = require('fs').promises;
             const binaryName = process.env.BINARY_NAME;
+            const tag = 'nightly';
+            console.log("Getting release id for tag '%s'...", tag);
             const release = await github.rest.repos.getReleaseByTag({
               owner,
               repo,
-              tag: 'nightly'
+              tag
             });
-            console.log(release);
             const release_id = release.data.id;
+            console.log("Retrieving list of assets for release id %s...", release_id);
             const assets = await github.rest.repos.listReleaseAssets({
               owner,
               repo,
               release_id
             });
-            console.log(assets);
             const data = await fs.readFile(binaryName);
-            github.rest.repos.uploadReleaseAsset({
+            console.log("Uploading asset %s...", binaryName);
+            const uploadResponse = await github.rest.repos.uploadReleaseAsset({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.data.id,
               name: binaryName,
               data
             });
-            
+            console.log("Upload response status: %s", uploadResponse.status);
+            for (const asset of assets.data) {
+              if (asset.name.includes("linux") && asset.name != binaryName) {
+                console.log("Deleting old asset %s...", asset.name);
+                const deleteResponse = await github.rest.repos.deleteReleaseAsset({
+                  owner,
+                  repo,
+                  asset_id: asset.id
+                });
+                console.log("Delete response status: %s", deleteResponse.status);
+              }
+            }
